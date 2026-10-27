@@ -187,14 +187,14 @@ REPORT_SCHEMA = {
 }
 
 
-# --------------------------------------------------------------------------- API call
+# --------------------------------------------------------------------------- prompt assembly
+
+RULE_ID_RE = re.compile(r"\bR0?(\d{1,2})\b")   # accepts "R07" and "R7"
 
 
-def run_check(text: str, text_type_hint: str, cfg: dict, rules_text: str, api_key: str) -> dict:
-    """Send the text and rules to the model and return the parsed report as a dict."""
-    client = anthropic.Anthropic(api_key=api_key)
-
-    system = [
+def build_system(rules_text: str) -> list[dict]:
+    """The system prompt sent with every check: fixed instructions + the current rules."""
+    return [
         {
             "type": "text",
             "text": SYSTEM_PROMPT + "\n\n# RULES\n\n" + rules_text,
@@ -202,10 +202,33 @@ def run_check(text: str, text_type_hint: str, cfg: dict, rules_text: str, api_ke
             "cache_control": {"type": "ephemeral"},
         }
     ]
-    user_message = (
+
+
+def build_user_message(text: str, text_type_hint: str = "Auto-detect") -> str:
+    return (
         f"Text type (as stated by the user): {text_type_hint}\n\n"
         "Text to check:\n<text>\n" + text.strip() + "\n</text>"
     )
+
+
+def triggered_rule_ids(report: dict) -> list[str]:
+    """Sorted list of rule IDs (e.g. ['R02', 'R07']) that the report's findings refer to."""
+    ids = set()
+    for f in report.get("findings", []) or []:
+        m = RULE_ID_RE.search(str(f.get("rule_id", ""))) or RULE_ID_RE.search(str(f.get("title", "")))
+        if m:
+            ids.add(f"R{int(m.group(1)):02d}")
+    return sorted(ids)
+
+
+# --------------------------------------------------------------------------- API call
+
+
+def run_check(text: str, text_type_hint: str, cfg: dict, rules_text: str, api_key: str) -> dict:
+    """Send the text and rules to the model and return the parsed report as a dict."""
+    client = anthropic.Anthropic(api_key=api_key)
+    system = build_system(rules_text)
+    user_message = build_user_message(text, text_type_hint)
 
     try:
         response = client.beta.messages.create(
@@ -290,6 +313,8 @@ def _normalise(report: dict) -> dict:
     report.setdefault("satisfied", [])
     report.setdefault("not_applicable", [])
     report.setdefault("experiments_detected", [])
+    # Plain list of triggered rule IDs, so results can be compared by ID (used by the evaluation).
+    report["triggered_rules"] = triggered_rule_ids(report)
     return report
 
 
@@ -333,6 +358,8 @@ def report_to_markdown(report: dict, original_text: str) -> str:
         lines.append("")
     if report["not_applicable"]:
         lines += ["## Not applicable", "", ", ".join(report["not_applicable"]), ""]
+    if report.get("triggered_rules"):
+        lines += ["Rules triggered: " + ", ".join(report["triggered_rules"]), ""]
     meta = report.get("_meta", {})
     if meta:
         lines += [f"_Checked with {meta.get('model', '')}_", ""]

@@ -87,6 +87,18 @@ exp-check is an AI-assisted checklist. It can miss problems and it can be wrong,
 not replace a statistician, a core facility, or a domain expert. Treat its output as a list
 of questions to answer before submission, not as a verdict.
 
+## Evaluation
+
+How well do different Claude models apply the rules? `tests/` holds 75 test cases
+(25 handwritten, 50 synthetic, 15 of them clean) with answer keys by rule ID, and scripts
+that run every case three times per model through the Batch API.
+
+<!-- eval-table-start -->
+
+_Not run yet. See [docs/eval.md](docs/eval.md) and [tests/README.md](tests/README.md)._
+
+<!-- eval-table-end -->
+
 ## License
 
 MIT. See [LICENSE](LICENSE).
