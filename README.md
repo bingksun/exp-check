@@ -86,3 +86,7 @@ git by `.gitignore`.
 exp-check is an AI-assisted checklist. It can miss problems and it can be wrong, and it does
 not replace a statistician, a core facility, or a domain expert. Treat its output as a list
 of questions to answer before submission, not as a verdict.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
