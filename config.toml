@@ -1,0 +1,16 @@
+# exp-check configuration
+# Edit the values below, save, and restart the app (or click "Rerun" in the browser).
+
+# Anthropic model ID used for every check.
+# Current Sonnet: "claude-sonnet-5-5".  Other options: "claude-opus-5-5", "claude-haiku-5-5".
+model = "claude-sonnet-5-5"
+
+# How hard the model thinks before answering: "low", "medium" or "high".
+# Higher = more thorough and slightly slower / more expensive per check.
+effort = "high"
+
+# Maximum length of the model's answer, in tokens. 16000 is plenty for a full report.
+max_tokens = 16000
+
+# File that holds the checking rules (plain English). Edit that file to add or change rules.
+rules_file = "rules.md"
