@@ -134,3 +134,32 @@ python tests/run_eval.py latency --n 5       # optional: direct-call timing samp
 ```
 
 On Windows, `collect_results.bat` runs the collect step.
+
+<!-- compare-start -->
+## Comparison: baseline vs prompt-v2
+
+_Same 75 cases and 3 repeats; only the system prompt changed (prompt v1 -> prompt v2). Full results of the tagged run: [docs/eval-prompt-v2.md](eval-prompt-v2.md)._
+
+### Claude Sonnet 5.5: prompt v1 vs prompt v2 (prompt-v2)
+
+| Metric | prompt v1 | prompt v2 (prompt-v2) |
+|---|---|---|
+| Recall | 99% | 91% |
+| Precision | 48% | 91% |
+| FP rate (all) | 52% | 9% |
+| FP rate (critical/major) | 23% | 6% |
+| FP per run (all) | 1.8 | 0.2 |
+| FP per run (critical/major) | 0.5 | 0.1 |
+| Clean cases flagged (critical/major) | 29% | 0% |
+| Clean cases flagged (any) | 96% | 0% |
+| Consistency | 81% | 93% |
+| Refused | 0% | 0% |
+| Mean cost / check (batch) | $0.013 | $0.0095 |
+| Runs ok / total | 225 / 225 | 225 / 225 |
+
+| Subset | FP rate (critical/major) prompt v1 | FP rate (critical/major) prompt v2 (prompt-v2) | Clean flagged (critical/major) prompt v1 | Clean flagged (critical/major) prompt v2 (prompt-v2) | Recall prompt v1 | Recall prompt v2 (prompt-v2) |
+|---|---|---|---|---|---|---|
+| handwritten | 23% | 9% | 40% | 0% | 98% | 91% |
+| synthetic | 23% | 3% | 23% | 0% | 100% | 92% |
+
+<!-- compare-end -->

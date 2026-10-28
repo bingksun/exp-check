@@ -89,7 +89,7 @@
       "model_id": "claude-sonnet-5-5",
       "batch_id": "msgbatch_013uRMFkZXJjJq66PoYyRwm1",
       "n_requests": 225,
-      "status": "in_progress"
+      "status": "ended"
     }
   ]
 }
