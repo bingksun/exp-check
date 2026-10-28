@@ -353,11 +353,12 @@ def do_score(rec: dict, partial: bool = False) -> None:
     readme_done = False if partial else ek.update_readme(summary)
 
     print()
-    print(f"{'模型':<20}{'召回率':>8}{'误报率':>8}{'干净案例被冤枉':>16}{'一致性':>8}{'平均费用/次':>12}{'成功/总数':>12}")
+    print(f"{'模型':<20}{'召回率':>8}{'误报率(全部)':>12}{'误报率(严重/主要)':>16}{'干净案例被冤枉':>16}"
+          f"{'拒答':>8}{'平均费用/次':>12}{'成功/总数':>12}")
     for e in summary["models"].values():
         m = e["all"]
-        print(f"{e['label']:<20}{ek.pct(m['recall']):>8}{ek.pct(m['fp_rate']):>8}"
-              f"{ek.pct(m['clean_flagged_major']):>16}{ek.pct(m['consistency']):>8}"
+        print(f"{e['label']:<20}{ek.pct(m['recall']):>8}{ek.pct(m['fp_rate']):>12}{ek.pct(m.get('fp_rate_major')):>16}"
+              f"{ek.pct(m['clean_flagged_major']):>16}{ek.pct(m.get('refusal_rate')):>8}"
               f"{ek.money(m['mean_cost_usd']):>12}{str(m['ok']) + '/' + str(m['runs']):>12}")
     print()
     print(f"详细报表已写入 {ek.DOCS_EVAL}（{'部分结果' if partial else '全部结果'}）。")
@@ -368,7 +369,8 @@ def do_score(rec: dict, partial: bool = False) -> None:
 
 
 def cmd_score(args):
-    do_score(load_record(), partial=False)
+    rec = load_record()
+    do_score(rec, partial=any(b.get("status") != "ended" for b in rec["batches"]))
 
 
 # --------------------------------------------------------------------------- latency

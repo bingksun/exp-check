@@ -95,8 +95,14 @@ that run every case three times per model through the Batch API.
 
 <!-- eval-table-start -->
 
-_Not run yet. See [docs/eval.md](docs/eval.md) and [tests/README.md](tests/README.md)._
+| Model | Recall | False positives (all) | False positives (critical/major) | Clean cases wrongly flagged | Refused | Mean cost / check (batch) | Mean latency (direct) |
+|---|---|---|---|---|---|---|---|
+| Claude Haiku 5.5 | 98% | 62% | 44% | 84% | 0% | $0.0013 | 24 s |
+| Claude Sonnet 5.5 | 99% | 53% | 27% | 33% | 0% | $0.013 | 19 s |
+| Claude Opus 5.5 | 100% | 52% | 33% | 56% | 36% | $0.022 | 42 s |
+| Claude Fable 5.1 | 99% | 51% | 27% | 26% | 35% | $0.066 | 38 s |
 
+_75 cases, 3 repeats per model, batch prices. Full results and metric definitions in [docs/eval.md](docs/eval.md)._
 <!-- eval-table-end -->
 
 ## License

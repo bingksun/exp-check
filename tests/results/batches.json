@@ -87,28 +87,28 @@
       "model_id": "claude-haiku-5-5",
       "batch_id": "msgbatch_01RBD6pZWN7nnBJZ7wAVCBMx",
       "n_requests": 225,
-      "status": "in_progress"
+      "status": "ended"
     },
     {
       "model_key": "sonnet55",
       "model_id": "claude-sonnet-5-5",
       "batch_id": "msgbatch_01FHYFgTipYRNQWufLi6HqT8",
       "n_requests": 225,
-      "status": "in_progress"
+      "status": "ended"
     },
     {
       "model_key": "opus55",
       "model_id": "claude-opus-5-5",
       "batch_id": "msgbatch_01A12mres7L81y5tKAXGoxrr",
       "n_requests": 225,
-      "status": "in_progress"
+      "status": "ended"
     },
     {
       "model_key": "fable51",
       "model_id": "claude-fable-5-1",
       "batch_id": "msgbatch_01SpumYqwn7f84m7jtty9W1g",
       "n_requests": 225,
-      "status": "in_progress"
+      "status": "ended"
     }
   ]
 }

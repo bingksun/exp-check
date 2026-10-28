@@ -344,6 +344,8 @@ def metrics(runs: list, cases: dict, price: dict, batch: bool = True) -> dict:
     """
     ok = [r for r in runs if r.status == "ok"]
     planted = caught = reported = fp = 0
+    reported_major = fp_major = 0
+    fp_by_sev = {"critical": 0, "major": 0, "minor": 0}
     clean_n = clean_any = clean_major = 0
     for r in ok:
         c = cases[r.case_id]
@@ -354,6 +356,14 @@ def metrics(runs: list, cases: dict, price: dict, batch: bool = True) -> dict:
             caught += len(P & A)
         reported += len(scored)
         fp += len(scored - A)
+        for rule in scored:
+            sev = r.rules[rule]
+            if SEV_RANK[sev] >= 2:
+                reported_major += 1
+            if rule not in A:
+                fp_by_sev[sev] += 1
+                if SEV_RANK[sev] >= 2:
+                    fp_major += 1
         if not A:
             clean_n += 1
             if scored:
@@ -361,9 +371,12 @@ def metrics(runs: list, cases: dict, price: dict, batch: bool = True) -> dict:
             if any(SEV_RANK[r.rules[x]] >= 2 for x in scored):
                 clean_major += 1
     errors = {}
+    refused_cases = {}
     for r in runs:
         if r.status != "ok":
             errors[r.status] = errors.get(r.status, 0) + 1
+        if r.status == "refusal":
+            refused_cases[r.case_id] = refused_cases.get(r.case_id, 0) + 1
     costs = [usage_cost(r.usage, price, batch) for r in runs if r.usage]
     by_case = {}
     for r in ok:
@@ -384,6 +397,10 @@ def metrics(runs: list, cases: dict, price: dict, batch: bool = True) -> dict:
         "precision": (reported - fp) / reported if reported else None,
         "fp_rate": fp / reported if reported else None,
         "fp_per_run": fp / len(ok) if ok else None,
+        "fp_rate_major": fp_major / reported_major if reported_major else None,
+        "fp_per_run_major": fp_major / len(ok) if ok else None,
+        "fp_by_severity": fp_by_sev,
+        "refused_cases": dict(sorted(refused_cases.items())),
         "clean_runs": clean_n,
         "clean_flagged_any": clean_any / clean_n if clean_n else None,
         "clean_flagged_major": clean_major / clean_n if clean_n else None,
@@ -473,17 +490,18 @@ def num(x, nd=1) -> str:
 
 def _metrics_table(summary: dict, key: str) -> list:
     rows = [
-        "| Model | Recall | Precision | False-positive rate | FP per run | Clean cases flagged (critical/major) | Clean cases flagged (any) | Consistency | Mean cost / check (batch) | Runs ok / total |",
-        "|---|---|---|---|---|---|---|---|---|---|",
+        "| Model | Recall | Precision | FP rate (all) | FP rate (critical/major) | FP per run (all) | FP per run (critical/major) | Clean cases flagged (critical/major) | Clean cases flagged (any) | Consistency | Mean cost / check (batch) | Runs ok / total |",
+        "|---|---|---|---|---|---|---|---|---|---|---|---|",
     ]
     for mk, e in summary["models"].items():
         m = e.get(key)
         if not m:
-            rows.append(f"| {e['label']} | - | - | - | - | - | - | - | - | 0 / 0 |")
+            rows.append(f"| {e['label']} | - | - | - | - | - | - | - | - | - | - | 0 / 0 |")
             continue
         rows.append(
             f"| {e['label']} | {pct(m['recall'])} | {pct(m['precision'])} | {pct(m['fp_rate'])} | "
-            f"{num(m['fp_per_run'])} | {pct(m['clean_flagged_major'])} | {pct(m['clean_flagged_any'])} | "
+            f"{pct(m.get('fp_rate_major'))} | {num(m['fp_per_run'])} | {num(m.get('fp_per_run_major'))} | "
+            f"{pct(m['clean_flagged_major'])} | {pct(m['clean_flagged_any'])} | "
             f"{pct(m['consistency'])} | {money(m['mean_cost_usd'])} | {m['ok']} / {m['runs']} |"
         )
     return rows
@@ -491,15 +509,16 @@ def _metrics_table(summary: dict, key: str) -> list:
 
 def compact_table(summary: dict) -> list:
     rows = [
-        "| Model | Recall | False-positive rate | Clean cases wrongly flagged | Refused | Mean cost / check (batch) | Mean latency (direct) |",
-        "|---|---|---|---|---|---|---|",
+        "| Model | Recall | False positives (all) | False positives (critical/major) | Clean cases wrongly flagged | Refused | Mean cost / check (batch) | Mean latency (direct) |",
+        "|---|---|---|---|---|---|---|---|",
     ]
     for mk, e in summary["models"].items():
         m = e["all"]
         lat = e.get("latency") or {}
         rows.append(
-            f"| {e['label']} | {pct(m['recall'])} | {pct(m['fp_rate'])} | {pct(m['clean_flagged_major'])} | "
-            f"{pct(m.get('refusal_rate'))} | {money(m['mean_cost_usd'])} | {secs(lat.get('mean_s'))} |"
+            f"| {e['label']} | {pct(m['recall'])} | {pct(m['fp_rate'])} | {pct(m.get('fp_rate_major'))} | "
+            f"{pct(m['clean_flagged_major'])} | {pct(m.get('refusal_rate'))} | {money(m['mean_cost_usd'])} | "
+            f"{secs(lat.get('mean_s'))} |"
         )
     return rows
 
@@ -530,8 +549,13 @@ def write_eval_md(summary: dict, reps: int, cfg: dict, path: Path = DOCS_EVAL) -
         "",
         "- **Recall** - planted problems that were reported / all planted problems (flawed cases only).",
         "- **Precision** - reported rules that were planted / all reported rules.",
-        "- **False-positive rate** - reported rules that were *not* planted / all reported rules.",
-        "- **FP per run** - mean number of not-planted rules reported per check.",
+        "- **False-positive (FP) rate (all)** - reported rules that were *not* planted / all reported rules, "
+        "whatever severity the model gave them.",
+        "- **FP rate (critical/major)** - the same ratio counting only findings the model rated critical or "
+        "major. Most not-planted findings are rated *minor* (typically 'catalogue number / sequence not listed', "
+        "R12), so this column is the better measure of reports that would actually mislead a user.",
+        "- **FP per run** - mean number of not-planted rules reported per check (all severities, and "
+        "critical/major only).",
         "- **Clean cases flagged** - share of checks on clean cases that reported at least one critical/major "
         "finding (primary) or any finding at all (strict).",
         "- **Consistency** - mean pairwise Jaccard similarity of the reported rule sets across the repeats of a case "
@@ -580,6 +604,11 @@ def write_eval_md(summary: dict, reps: int, cfg: dict, path: Path = DOCS_EVAL) -
             for p in (e["per_rule"][rule] for e in s["models"].values())
         )
         lines.append(f"| {rule} | {n_cases} | {cells} |")
+    lines += ["", "## False positives by severity (all cases)", "",
+              "| Model | Critical | Major | Minor |", "|---|---|---|---|"]
+    for e in s["models"].values():
+        b = e["all"].get("fp_by_severity") or {}
+        lines.append(f"| {e['label']} | {b.get('critical', 0)} | {b.get('major', 0)} | {b.get('minor', 0)} |")
     lines += ["", "## Per-rule false positives (count of not-planted reports, all cases)", "",
               "| Rule | " + " | ".join(e["label"] for e in s["models"].values()) + " |",
               "|---|" + "---|" * len(s["models"])]
@@ -603,7 +632,15 @@ def write_eval_md(summary: dict, reps: int, cfg: dict, path: Path = DOCS_EVAL) -
         "not accept the `fallbacks` parameter, so a refusal is a failed run here and costs only the input tokens. "
         "The app itself sends `fallbacks: \"default\"`, so a refused check is re-run on Anthropic's fallback model "
         "instead of failing. The **Refused** column in the README table is refusals / all runs.",
+        "",
     ]
+    for e in s["models"].values():
+        rc = e["all"].get("refused_cases") or {}
+        if rc:
+            lines.append(f"- **{e['label']}** refused {sum(rc.values())} runs on {len(rc)} cases: " +
+                         ", ".join(f"{cid} ({n}/{s.get('reps', 3)})" for cid, n in rc.items()))
+        else:
+            lines.append(f"- **{e['label']}**: no refusals.")
     lines += [
         "",
         "## Reproducing",
