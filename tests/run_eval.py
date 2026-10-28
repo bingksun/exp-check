@@ -464,26 +464,27 @@ COMPARE_ROWS = [
 ]
 
 
-def compare_markdown(base: dict, other: dict, keys: list) -> list:
-    bl = f"prompt {base.get('prompt_version', 'v1')}"
-    ol = f"prompt {other.get('prompt_version', '?')}" + (f" ({other['tag']})" if other.get("tag") else "")
+def run_label(summary: dict) -> str:
+    return f"prompt {summary.get('prompt_version', 'v1')}" + (f" ({summary['tag']})" if summary.get("tag") else "")
+
+
+def compare_markdown(runs: list, keys: list) -> list:
+    """runs: [baseline summary, tagged summary, ...] - one column per run."""
+    labels = [run_label(s) for s in runs]
     lines = []
     for mk in keys:
-        eb, eo = base["models"][mk], other["models"][mk]
-        lines += [f"### {eb['label']}: {bl} vs {ol}", "",
-                  f"| Metric | {bl} | {ol} |", "|---|---|---|"]
+        entries = [s["models"][mk] for s in runs]
+        lines += [f"### {entries[0]['label']}: " + " vs ".join(labels), "",
+                  "| Metric | " + " | ".join(labels) + " |", "|---|" + "---|" * len(runs)]
         for label, key, fmt in COMPARE_ROWS:
-            lines.append(f"| {label} | {fmt(eb['all'].get(key))} | {fmt(eo['all'].get(key))} |")
-        lines.append(f"| Runs ok / total | {eb['all']['ok']} / {eb['all']['runs']} | {eo['all']['ok']} / {eo['all']['runs']} |")
-        lines.append("")
-        lines += [f"| Subset | FP rate (critical/major) {bl} | FP rate (critical/major) {ol} | "
-                  f"Clean flagged (critical/major) {bl} | Clean flagged (critical/major) {ol} | Recall {bl} | Recall {ol} |",
-                  "|---|---|---|---|---|---|---|"]
+            lines.append(f"| {label} | " + " | ".join(fmt(e["all"].get(key)) for e in entries) + " |")
+        lines.append("| Runs ok / total | " + " | ".join(f"{e['all']['ok']} / {e['all']['runs']}" for e in entries) + " |")
+        lines += ["", "| Subset / metric | " + " | ".join(labels) + " |", "|---|" + "---|" * len(runs)]
         for src in ("handwritten", "synthetic"):
-            mb, mo = eb.get(src) or {}, eo.get(src) or {}
-            lines.append(f"| {src} | {ek.pct(mb.get('fp_rate_major'))} | {ek.pct(mo.get('fp_rate_major'))} | "
-                         f"{ek.pct(mb.get('clean_flagged_major'))} | {ek.pct(mo.get('clean_flagged_major'))} | "
-                         f"{ek.pct(mb.get('recall'))} | {ek.pct(mo.get('recall'))} |")
+            for label, key, fmt in (("recall", "recall", ek.pct), ("FP rate (critical/major)", "fp_rate_major", ek.pct),
+                                    ("clean cases flagged (critical/major)", "clean_flagged_major", ek.pct)):
+                cells = " | ".join(fmt((e.get(src) or {}).get(key)) for e in entries)
+                lines.append(f"| {src} / {label} | {cells} |")
         lines.append("")
     return lines
 
@@ -499,45 +500,48 @@ def replace_block(text: str, start: str, end: str, block: str, append_if_missing
 
 
 def cmd_compare(args):
-    if not args.tag:
-        die("compare 需要 --tag，例如：python tests/run_eval.py compare --tag prompt-v2")
-    base, other = Paths(args.baseline), Paths(args.tag)
-    for p in (base.summary_file, other.summary_file):
-        if not p.exists():
-            die(f"找不到 {p}。先对该运行执行 collect。")
-    sb = json.loads(base.summary_file.read_text(encoding="utf-8"))
-    so = json.loads(other.summary_file.read_text(encoding="utf-8"))
-    keys = [k for k in so["models"] if k in sb["models"] and (not args.models or k in args.models)]
+    tags = args.tags or ([args.tag] if args.tag else [])
+    if not tags:
+        die("compare 需要 --tag 或 --tags，例如：python tests/run_eval.py compare --tags prompt-v2 prompt-v3")
+    base = Paths(args.baseline)
+    others = [Paths(t) for t in tags]
+    for p in [base] + others:
+        if not p.summary_file.exists():
+            die(f"找不到 {p.summary_file}。先对该运行执行 collect。")
+    runs = [json.loads(p.summary_file.read_text(encoding="utf-8")) for p in [base] + others]
+    keys = [k for k in runs[0]["models"] if all(k in s["models"] for s in runs) and (not args.models or k in args.models)]
     if not keys:
-        die("两个运行没有共同的模型，无法对比。")
-    title = f"## Comparison: {base.tag or 'baseline'} vs {other.tag}"
-    note = (f"_Same {so['n_cases']} cases and {so.get('reps', 3)} repeats; only the system prompt changed "
-            f"(prompt {sb.get('prompt_version', 'v1')} -> prompt {so.get('prompt_version', '?')}). "
-            f"Full results of the tagged run: [docs/{other.eval_md.name}]({other.eval_md.name})._")
-    body = "\n".join([title, "", note, "", *compare_markdown(sb, so, keys)])
+        die("这些运行没有共同的模型，无法对比。")
+    title = "## Comparison: " + " vs ".join([base.tag or "baseline"] + tags)
+    links = ", ".join(f"[docs/{p.eval_md.name}]({p.eval_md.name})" for p in others)
+    note = (f"_Same {runs[0]['n_cases']} cases and {runs[0].get('reps', 3)} repeats; only the system prompt and the "
+            f"'Satisfied when / Not a finding' lines in rules.md changed between runs. Full results of the tagged "
+            f"runs: {links}._")
+    body = "\n".join([title, "", note, "", *compare_markdown(runs, keys)])
 
     eval_text = base.eval_md.read_text(encoding="utf-8") if base.eval_md.exists() else "# Evaluation\n"
     base.eval_md.write_text(replace_block(eval_text, ek.COMPARE_START, ek.COMPARE_END, body, True), encoding="utf-8")
     print(f"对比表已写入 {base.eval_md}。")
 
+    def arrow(key, fmt):
+        return " → ".join(fmt(s["models"][k]["all"].get(key)) for s in runs)
+
+    labels = " → ".join(run_label(s).split(" (")[0] for s in runs)
     readme = ek.README.read_text(encoding="utf-8")
-    short = [f"_Prompt revision ({other.tag}): " + "; ".join(
-        f"{so['models'][k]['label']} FP rate (critical/major) {ek.pct(sb['models'][k]['all'].get('fp_rate_major'))} "
-        f"→ {ek.pct(so['models'][k]['all'].get('fp_rate_major'))}, clean cases wrongly flagged "
-        f"{ek.pct(sb['models'][k]['all'].get('clean_flagged_major'))} → {ek.pct(so['models'][k]['all'].get('clean_flagged_major'))}, "
-        f"recall {ek.pct(sb['models'][k]['all'].get('recall'))} → {ek.pct(so['models'][k]['all'].get('recall'))}"
-        for k in keys) + ". Details in [docs/eval.md](docs/eval.md#comparison)._"]
+    short = []
+    for k in keys:
+        short.append(f"_Prompt revisions ({labels}), {runs[0]['models'][k]['label']}: FP rate (critical/major) "
+                     f"{arrow('fp_rate_major', ek.pct)}; clean cases wrongly flagged {arrow('clean_flagged_major', ek.pct)}; "
+                     f"recall {arrow('recall', ek.pct)}. Details in [docs/eval.md](docs/eval.md#comparison)._")
     new = replace_block(readme, ek.README_COMPARE_START, ek.README_COMPARE_END, "\n".join(short), False)
     if new is None:
         print("README.md 里没有 <!-- eval-compare-start --> 标记，README 没有改。")
     else:
         ek.README.write_text(new, encoding="utf-8")
         print("README.md 里的对比说明已更新。")
-    for mk in keys:
-        eb, eo = sb["models"][mk]["all"], so["models"][mk]["all"]
-        print(f"{so['models'][mk]['label']}: 误报率(严重/主要) {ek.pct(eb.get('fp_rate_major'))} → {ek.pct(eo.get('fp_rate_major'))}；"
-              f"干净案例被冤枉 {ek.pct(eb.get('clean_flagged_major'))} → {ek.pct(eo.get('clean_flagged_major'))}；"
-              f"召回率 {ek.pct(eb.get('recall'))} → {ek.pct(eo.get('recall'))}")
+    for k in keys:
+        print(f"{runs[0]['models'][k]['label']}: 误报率(严重/主要) {arrow('fp_rate_major', ek.pct)}；"
+              f"干净案例被冤枉 {arrow('clean_flagged_major', ek.pct)}；召回率 {arrow('recall', ek.pct)}")
 
 
 # --------------------------------------------------------------------------- main
@@ -566,6 +570,7 @@ def main():
     p.add_argument("--n", type=int, default=5, help="cases per model (default 5)")
     p = sub.add_parser("compare"); common(p)
     p.add_argument("--baseline", help="tag of the baseline run (default: the untagged baseline)")
+    p.add_argument("--tags", nargs="+", help="one or more tagged runs to show side by side (instead of --tag)")
 
     args = ap.parse_args()
     P = Paths(args.tag)

@@ -42,15 +42,21 @@ negative result is uninterpretable.
 Default severity: critical if the negative control is missing; major if only the positive
 control is missing.
 
-Satisfied when: the text names a matched comparator for the variable under test (vehicle,
-non-targeting siRNA, empty vector, IgG/isotype or input for ChIP/CUT&Tag/Co-IP, a Cas9-expressing
-non-targeting line, untreated cells when nothing at all is added to the treated arm). Assume it
-was handled identically unless the text states a difference.
+Satisfied when: every manipulated variable has its own matched comparator: a vehicle arm for a
+compound (not "no treatment" or plain medium), a non-targeting arm for a genetic perturbation, an
+empty-vector arm for overexpression, a control harvested at the same time. Assume a named control
+was handled identically unless the text states a difference. Antibody-based enrichment or
+detection (ChIP, CUT&Tag, CUT&RUN, Co-IP, immunostaining scored by eye) additionally needs an
+IgG/isotype, input or no-primary-antibody control, and a reporter assay needs a control reporter
+(empty vector or mutated element); a knockdown-versus-control comparison does not replace these.
 
 Not a finding: a missing positive control when the reported effect is positive (mention it in
 notes at most; it becomes a finding only when a negative or null result depends on assay
 sensitivity). A missing or mismatched RNAi or CRISPR control is reported under R07 or R09, not
-again here.
+again here. Report R01 when a manipulated variable has no comparator (a drug with no vehicle arm,
+even if the genetic arms are controlled), when the comparator is the wrong one ("no treatment" for
+an injected compound, untransfected cells for a plasmid, a control harvested at a different
+time), or when the IgG/input or control-reporter control named above is missing.
 
 ## R02 - Biological replicates and sample size
 
@@ -107,7 +113,9 @@ Applies to: any figure legend or methods text that reports quantitative results.
 Check: Does the legend/method state (a) what the error bars or box plots represent (SD, SEM,
 95% CI, range), (b) the exact n and what it counts, (c) the name of the statistical test,
 (d) exact p-values or clearly defined thresholds, and (e) how multiple comparisons were handled?
-Is "representative of 3 experiments" backed by quantification?
+Is "representative of 3 experiments" backed by quantification? Is a non-significant p-value
+(p > 0.05) presented as a "trend" or as "approaching significance"? Is a quantitative comparison
+(a fold change, a percentage, an IC50) reported with neither n nor any measure of variability?
 
 Why reviewers care: Journals' reporting checklists require these items; missing them delays
 or blocks acceptance and makes the result impossible to evaluate.
@@ -116,12 +124,16 @@ Default severity: major.
 
 Satisfied when: the text presents no quantitative result (a Methods paragraph that names the test
 and n but shows no figure, value or p-value has nothing to report here), or the result it presents
-defines its error bars, gives p-values or a threshold, and backs "representative" with
-quantification.
+defines its error bars, gives p-values or a threshold, backs "representative" with quantification,
+reports its numbers with n and a measure of variability, and does not call p > 0.05 a trend.
 
 Not a finding: exact p-values when p-values are given; one- versus two-sided; the terms of a named
 model; attrition handling; n of a secondary measurement. R04 applies only where a figure panel, a
-value with ± or error bars, a p-value, significance stars or a "representative" image appears.
+reported value, a p-value, significance stars or a "representative" image appears. Report R04 when
+error bars are shown but not defined, when "significant" or asterisks appear with no p-value or
+threshold, when a "representative" image stands in for quantification, when p > 0.05 is described
+as a trend or as approaching significance, or when a quantitative comparison (fold change, IC50,
+percentage) is reported with neither n nor any measure of variability.
 
 ## R05 - Blinding and randomization
 
@@ -271,8 +283,11 @@ Satisfied when: the text describes a rescue with a cDNA stated to be resistant t
 Not a finding: the expression level of the construct, its delivery, the empty-vector arm, or which
 siRNA, guide or clone was rescued not being stated. When the text describes only validation or
 reagents and reports no phenotype, R11 is not applicable. Report R11 when a rescue uses a cDNA not
-stated to be resistant (the reagent would silence it too), or when a loss-of-function phenotype is
-the stated conclusion and neither a rescue nor a reason for omitting one is mentioned.
+stated to be resistant (the reagent would silence it too), or when the text reports any phenotype
+of the knockdown or knockout cells (a difference from the control counts, even without a sentence
+such as "X is required for Y": the reported difference is the conclusion) and neither a rescue
+nor a reason for omitting one is mentioned. A second independent siRNA or guide does not replace
+the rescue for this rule; it only keeps the severity at major instead of critical.
 
 ## R12 - Reagent identity, normalization and loading controls
 
