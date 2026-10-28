@@ -1,0 +1,199 @@
+{
+  "generated_at": "2026-10-28T23:54:22+00:00",
+  "n_cases": 75,
+  "n_handwritten": 25,
+  "n_synthetic": 50,
+  "n_clean": 15,
+  "planted_cases": {
+    "R01": 13,
+    "R02": 28,
+    "R03": 21,
+    "R04": 11,
+    "R05": 5,
+    "R06": 5,
+    "R07": 5,
+    "R08": 14,
+    "R09": 4,
+    "R10": 2,
+    "R11": 6,
+    "R12": 17
+  },
+  "models": {
+    "sonnet55": {
+      "label": "Claude Sonnet 5.5",
+      "model_id": "claude-sonnet-5-5",
+      "all": {
+        "runs": 225,
+        "ok": 225,
+        "errors": {},
+        "planted": 393,
+        "caught": 382,
+        "reported": 419,
+        "false_positives": 37,
+        "recall": 0.9720101781170484,
+        "precision": 0.9116945107398569,
+        "fp_rate": 0.0883054892601432,
+        "fp_per_run": 0.16444444444444445,
+        "fp_rate_major": 0.060759493670886074,
+        "fp_per_run_major": 0.10666666666666667,
+        "fp_by_severity": {
+          "critical": 6,
+          "major": 18,
+          "minor": 13
+        },
+        "refused_cases": {},
+        "clean_runs": 45,
+        "clean_flagged_any": 0.0,
+        "clean_flagged_major": 0.0,
+        "mean_cost_usd": 0.009941053777777778,
+        "total_cost_usd": 2.2367371,
+        "mean_output_tokens": 1714.68,
+        "mean_latency_s": null,
+        "consistency": 0.9493968253968255,
+        "unknown_rule_reports": 0,
+        "refusal_rate": 0.0
+      },
+      "handwritten": {
+        "runs": 75,
+        "ok": 75,
+        "errors": {},
+        "planted": 213,
+        "caught": 207,
+        "reported": 234,
+        "false_positives": 27,
+        "recall": 0.971830985915493,
+        "precision": 0.8846153846153846,
+        "fp_rate": 0.11538461538461539,
+        "fp_per_run": 0.36,
+        "fp_rate_major": 0.08108108108108109,
+        "fp_per_run_major": 0.24,
+        "fp_by_severity": {
+          "critical": 6,
+          "major": 12,
+          "minor": 9
+        },
+        "refused_cases": {},
+        "clean_runs": 15,
+        "clean_flagged_any": 0.0,
+        "clean_flagged_major": 0.0,
+        "mean_cost_usd": 0.00964784,
+        "total_cost_usd": 0.723588,
+        "mean_output_tokens": 1706.8,
+        "mean_latency_s": null,
+        "consistency": 0.9193015873015873,
+        "unknown_rule_reports": 0,
+        "refusal_rate": 0.0
+      },
+      "synthetic": {
+        "runs": 150,
+        "ok": 150,
+        "errors": {},
+        "planted": 180,
+        "caught": 175,
+        "reported": 185,
+        "false_positives": 10,
+        "recall": 0.9722222222222222,
+        "precision": 0.9459459459459459,
+        "fp_rate": 0.05405405405405406,
+        "fp_per_run": 0.06666666666666667,
+        "fp_rate_major": 0.03468208092485549,
+        "fp_per_run_major": 0.04,
+        "fp_by_severity": {
+          "critical": 0,
+          "major": 6,
+          "minor": 4
+        },
+        "refused_cases": {},
+        "clean_runs": 30,
+        "clean_flagged_any": 0.0,
+        "clean_flagged_major": 0.0,
+        "mean_cost_usd": 0.010087660666666666,
+        "total_cost_usd": 1.5131491,
+        "mean_output_tokens": 1718.62,
+        "mean_latency_s": null,
+        "consistency": 0.9644444444444443,
+        "unknown_rule_reports": 0,
+        "refusal_rate": 0.0
+      },
+      "per_rule": {
+        "R01": {
+          "planted": 39,
+          "caught": 39,
+          "false_positives": 4,
+          "recall": 1.0
+        },
+        "R02": {
+          "planted": 84,
+          "caught": 81,
+          "false_positives": 0,
+          "recall": 0.9642857142857143
+        },
+        "R03": {
+          "planted": 63,
+          "caught": 62,
+          "false_positives": 0,
+          "recall": 0.9841269841269841
+        },
+        "R04": {
+          "planted": 33,
+          "caught": 33,
+          "false_positives": 4,
+          "recall": 1.0
+        },
+        "R05": {
+          "planted": 15,
+          "caught": 14,
+          "false_positives": 2,
+          "recall": 0.9333333333333333
+        },
+        "R06": {
+          "planted": 15,
+          "caught": 14,
+          "false_positives": 0,
+          "recall": 0.9333333333333333
+        },
+        "R07": {
+          "planted": 15,
+          "caught": 15,
+          "false_positives": 0,
+          "recall": 1.0
+        },
+        "R08": {
+          "planted": 42,
+          "caught": 42,
+          "false_positives": 3,
+          "recall": 1.0
+        },
+        "R09": {
+          "planted": 12,
+          "caught": 12,
+          "false_positives": 0,
+          "recall": 1.0
+        },
+        "R10": {
+          "planted": 6,
+          "caught": 6,
+          "false_positives": 0,
+          "recall": 1.0
+        },
+        "R11": {
+          "planted": 18,
+          "caught": 18,
+          "false_positives": 6,
+          "recall": 1.0
+        },
+        "R12": {
+          "planted": 51,
+          "caught": 46,
+          "false_positives": 18,
+          "recall": 0.9019607843137255
+        }
+      },
+      "latency": null
+    }
+  },
+  "partial": false,
+  "reps": 3,
+  "tag": "prompt-v3",
+  "prompt_version": "v3"
+}

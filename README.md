@@ -106,7 +106,7 @@ _75 cases, 3 repeats per model, batch prices. Full results and metric definition
 <!-- eval-table-end -->
 
 <!-- eval-compare-start -->
-_Prompt revision (prompt-v2): Claude Sonnet 5.5 FP rate (critical/major) 23% → 6%, clean cases wrongly flagged 29% → 0%, recall 99% → 91%. Details in [docs/eval.md](docs/eval.md#comparison)._
+_Prompt revisions (prompt v1 → prompt v2 → prompt v3), Claude Sonnet 5.5: FP rate (critical/major) 23% → 6% → 6%; clean cases wrongly flagged 29% → 0% → 0%; recall 99% → 91% → 97%. Details in [docs/eval.md](docs/eval.md#comparison)._
 <!-- eval-compare-end -->
 
 ## License
