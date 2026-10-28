@@ -6,6 +6,11 @@
     python tests/run_eval.py collect                    # download finished batches, score, write the reports
     python tests/run_eval.py score                      # re-score from the downloaded raw files
     python tests/run_eval.py latency --n 5 [--yes]      # direct (non-batch) calls on a few cases to time them
+    python tests/run_eval.py compare --tag prompt-v2    # before/after table: baseline results vs a tagged run
+
+Add --tag NAME to submit/status/collect/score/latency to keep a separate run (for example after a
+prompt change) in tests/results/NAME/ with its own docs/eval-NAME.md, without touching the baseline
+results or the README table.
 
 Console output is in Chinese for the project owner; the files written to the repo are in English.
 """
@@ -14,6 +19,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 import time
 from datetime import datetime, timezone
@@ -31,9 +37,25 @@ sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 # Rough output size per check (thinking tokens count as output). Used only for the estimate.
 OUTPUT_TOKENS_GUESS = {"haiku55": 3000, "sonnet55": 3500, "opus55": 4000, "fable51": 4500}
 
-BATCHES_FILE = ek.RESULTS_DIR / "batches.json"
-LATENCY_FILE = ek.RESULTS_DIR / "latency.jsonl"
-SUMMARY_FILE = ek.RESULTS_DIR / "summary.json"
+
+class Paths:
+    """Where one evaluation run keeps its files. The baseline run has no tag."""
+
+    def __init__(self, tag: str | None = None):
+        if tag and not re.fullmatch(r"[A-Za-z0-9._-]+", tag):
+            die("--tag 只能用字母、数字、点、横线和下划线。")
+        self.tag = tag
+        self.results_dir = ek.RESULTS_DIR / tag if tag else ek.RESULTS_DIR
+        self.batches_file = self.results_dir / "batches.json"
+        self.latency_file = self.results_dir / "latency.jsonl"
+        self.summary_file = self.results_dir / "summary.json"
+        self.eval_md = ek.ROOT / "docs" / (f"eval-{tag}.md" if tag else "eval.md")
+
+    def raw_path(self, mk: str) -> Path:
+        return self.results_dir / f"raw_{mk}.jsonl"
+
+
+P = Paths()
 
 
 def die(msg: str) -> None:
@@ -79,19 +101,15 @@ def confirm(prompt: str, yes: bool) -> None:
         die("已取消，没有提交，没有花钱。")
 
 
-def raw_path(mk: str) -> Path:
-    return ek.RESULTS_DIR / f"raw_{mk}.jsonl"
-
-
 def load_record() -> dict:
-    if not BATCHES_FILE.exists():
-        die("还没有提交过 Batch（找不到 tests/results/batches.json）。先运行 submit。")
-    return json.loads(BATCHES_FILE.read_text(encoding="utf-8"))
+    if not P.batches_file.exists():
+        die(f"还没有提交过 Batch（找不到 {P.batches_file}）。先运行 submit。")
+    return json.loads(P.batches_file.read_text(encoding="utf-8"))
 
 
 def save_record(rec: dict) -> None:
-    ek.RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-    BATCHES_FILE.write_text(json.dumps(rec, indent=2, ensure_ascii=False), encoding="utf-8")
+    P.results_dir.mkdir(parents=True, exist_ok=True)
+    P.batches_file.write_text(json.dumps(rec, indent=2, ensure_ascii=False), encoding="utf-8")
 
 
 # --------------------------------------------------------------------------- estimate
@@ -167,11 +185,11 @@ def cmd_submit(args):
     # Resumable: an existing record is continued (only the missing models are submitted)
     # unless --force, which archives the old record and starts over.
     rec = None
-    if BATCHES_FILE.exists():
+    if P.batches_file.exists():
         old = load_record()
         if args.force:
-            archive = BATCHES_FILE.with_name(f"batches.{stamp}.old.json")
-            BATCHES_FILE.rename(archive)
+            archive = P.batches_file.with_name(f"batches.{stamp}.old.json")
+            P.batches_file.rename(archive)
             print(f"旧的 Batch 记录已改名为 {archive.name}（不会再被取回），这次从头开始。")
         else:
             done = {b["model_key"]: b for b in old["batches"]}
@@ -182,17 +200,25 @@ def cmd_submit(args):
                 die("这些模型都已经提交过了。要全部重新提交请加 --force（旧记录会改名保存，不会丢）。")
             if old["case_ids"] != case_ids or old["reps"] != args.reps:
                 die("案例集或重复次数和上次提交时不一样，不能把新模型追加到旧记录里。要重新开始请加 --force。")
+            if old.get("prompt_version", "v1") != checker.PROMPT_VERSION:
+                die(f"上次提交用的是提示词 {old.get('prompt_version', 'v1')}，现在是 {checker.PROMPT_VERSION}，"
+                    "不能混在一个记录里。请用 --tag 开一个新的运行，或加 --force 重新开始。")
             rec = old
             print("继续上次的记录，只提交剩下的模型：" + ", ".join(ek.MODELS[k]["label"] for k in keys))
 
     rows, n_sample = estimate_table(client, cfg, rules, cases, keys, args.reps)
     print_estimate(rows, n_sample, args.reps, len(cases))
+    if P.tag:
+        print(f"（这是带标签的运行 {P.tag}，结果存在 {P.results_dir}，不会覆盖基线结果。）")
+    print(f"提示词版本：{checker.PROMPT_VERSION}")
     print()
     confirm("确认提交 Batch 并按上表付费？", args.yes)
 
     if rec is None:
         rec = {
             "created_at": now(),
+            "tag": P.tag,
+            "prompt_version": checker.PROMPT_VERSION,
             "reps": args.reps,
             "effort": cfg["effort"],
             "max_tokens": int(cfg["max_tokens"]),
@@ -201,7 +227,7 @@ def cmd_submit(args):
             "batches": [],
         }
     # Old outputs for the models being submitted would otherwise be scored as if they were new.
-    for p in [raw_path(mk) for mk in keys] + [SUMMARY_FILE]:
+    for p in [P.raw_path(mk) for mk in keys] + [P.summary_file]:
         if p.exists():
             moved = p.with_name(f"{p.stem}.{stamp}.old{p.suffix}")
             p.rename(moved)
@@ -221,7 +247,7 @@ def cmd_submit(args):
             batch = client.messages.batches.create(requests=requests)
         except anthropic.APIError as e:
             print(f"  {m['label']}: 提交失败：{e}")
-            print(f"已成功提交的模型都记在 {BATCHES_FILE} 里，没有丢。问题解决后再运行一次 submit，只会提交剩下的模型。")
+            print(f"已成功提交的模型都记在 {P.batches_file} 里，没有丢。问题解决后再运行一次 submit，只会提交剩下的模型。")
             sys.exit(1)
         rec["batches"].append({
             "model_key": mk,
@@ -233,8 +259,10 @@ def cmd_submit(args):
         save_record(rec)
         print(f"  {m['label']}: 已提交 batch {batch.id}（{len(requests)} 次请求）")
     print()
-    print(f"Batch 编号已保存到 {BATCHES_FILE}。通常 1 小时内跑完（最长 24 小时），结果保留 29 天。")
-    print("之后运行  python tests/run_eval.py collect  或双击 collect_results.bat 取结果并生成报表。")
+    print(f"Batch 编号已保存到 {P.batches_file}。通常 1 小时内跑完（最长 24 小时），结果保留 29 天。")
+    tag_opt = f" --tag {P.tag}" if P.tag else ""
+    print(f"之后运行  python tests/run_eval.py collect{tag_opt}  取结果并生成报表"
+          + ("。" if P.tag else "（或双击 collect_results.bat）。"))
 
 
 # --------------------------------------------------------------------------- status / collect
@@ -264,7 +292,7 @@ def cmd_status(args):
 
 
 def download(client, b) -> int:
-    path = raw_path(b["model_key"])
+    path = P.raw_path(b["model_key"])
     lines = []
     for res in client.messages.batches.results(b["batch_id"]):
         rt = res.result.type
@@ -278,7 +306,7 @@ def download(client, b) -> int:
             rec = {"custom_id": res.custom_id, "result_type": rt, "error": f"{etype}: {emsg}".strip(": "),
                    "usage": {}, "text": ""}
         lines.append(json.dumps(rec, ensure_ascii=False))
-    ek.RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+    P.results_dir.mkdir(parents=True, exist_ok=True)
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
     return len(lines)
 
@@ -291,14 +319,15 @@ def cmd_collect(args):
     for b in rec["batches"]:
         if b["status"] != "ended":
             continue
-        if raw_path(b["model_key"]).exists() and not args.redownload:
+        if P.raw_path(b["model_key"]).exists() and not args.redownload:
             print(f"  {ek.MODELS[b['model_key']]['label']}: 结果文件已存在，跳过下载（要重新下载请加 --redownload）")
             continue
         n = download(client, b)
-        print(f"  {ek.MODELS[b['model_key']]['label']}: 已下载 {n} 条结果 → {raw_path(b['model_key']).name}")
+        print(f"  {ek.MODELS[b['model_key']]['label']}: 已下载 {n} 条结果 → {P.raw_path(b['model_key']).name}")
     if pending:
-        print(f"还有 {len(pending)} 个 Batch 没跑完，稍后再运行一次（双击 collect_results.bat 即可）。")
-    have = [b for b in rec["batches"] if raw_path(b["model_key"]).exists()]
+        print(f"还有 {len(pending)} 个 Batch 没跑完，稍后再运行一次"
+              + ("。" if P.tag else "（双击 collect_results.bat 即可）。"))
+    have = [b for b in rec["batches"] if P.raw_path(b["model_key"]).exists()]
     if not have:
         return
     do_score(rec, partial=bool(pending))
@@ -306,7 +335,7 @@ def cmd_collect(args):
 
 def load_runs(mk: str) -> list:
     runs = []
-    for line in raw_path(mk).read_text(encoding="utf-8").splitlines():
+    for line in P.raw_path(mk).read_text(encoding="utf-8").splitlines():
         if line.strip():
             runs.append(ek.run_from_raw(json.loads(line)))
     return runs
@@ -314,9 +343,9 @@ def load_runs(mk: str) -> list:
 
 def load_latency() -> dict:
     out = {}
-    if not LATENCY_FILE.exists():
+    if not P.latency_file.exists():
         return out
-    for line in LATENCY_FILE.read_text(encoding="utf-8").splitlines():
+    for line in P.latency_file.read_text(encoding="utf-8").splitlines():
         if line.strip():
             run = ek.run_from_raw(json.loads(line))
             out.setdefault(run.model_key, []).append(run)
@@ -333,7 +362,7 @@ def do_score(rec: dict, partial: bool = False) -> None:
     runs_by_model = {}
     case_ids = {c.id for c in cases_used}
     for b in rec["batches"]:
-        if not raw_path(b["model_key"]).exists():
+        if not P.raw_path(b["model_key"]).exists():
             continue
         runs = load_runs(b["model_key"])
         stray = sorted({r.case_id for r in runs if r.case_id not in case_ids})
@@ -343,14 +372,16 @@ def do_score(rec: dict, partial: bool = False) -> None:
             runs = [r for r in runs if r.case_id in case_ids]
         runs_by_model[b["model_key"]] = runs
     if not runs_by_model:
-        die("没有可打分的结果文件（tests/results/raw_*.jsonl）。先运行 collect。")
+        die("没有可打分的结果文件（raw_*.jsonl）。先运行 collect。")
     summary = ek.score_all(runs_by_model, cases_used, load_latency())
     summary["partial"] = partial
     summary["reps"] = rec["reps"]
-    ek.RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-    SUMMARY_FILE.write_text(json.dumps(summary, indent=2, ensure_ascii=False), encoding="utf-8")
-    ek.write_eval_md(summary, rec["reps"], {"effort": rec["effort"], "max_tokens": rec["max_tokens"]})
-    readme_done = False if partial else ek.update_readme(summary)
+    summary["tag"] = P.tag
+    summary["prompt_version"] = rec.get("prompt_version", "v1")
+    P.results_dir.mkdir(parents=True, exist_ok=True)
+    P.summary_file.write_text(json.dumps(summary, indent=2, ensure_ascii=False), encoding="utf-8")
+    ek.write_eval_md(summary, rec["reps"], {"effort": rec["effort"], "max_tokens": rec["max_tokens"]}, P.eval_md)
+    readme_done = False if (partial or P.tag) else ek.update_readme(summary)
 
     print()
     print(f"{'模型':<20}{'召回率':>8}{'误报率(全部)':>12}{'误报率(严重/主要)':>16}{'干净案例被冤枉':>16}"
@@ -361,9 +392,11 @@ def do_score(rec: dict, partial: bool = False) -> None:
               f"{ek.pct(m['clean_flagged_major']):>16}{ek.pct(m.get('refusal_rate')):>8}"
               f"{ek.money(m['mean_cost_usd']):>12}{str(m['ok']) + '/' + str(m['runs']):>12}")
     print()
-    print(f"详细报表已写入 {ek.DOCS_EVAL}（{'部分结果' if partial else '全部结果'}）。")
+    print(f"详细报表已写入 {P.eval_md}（{'部分结果' if partial else '全部结果'}）。")
     if readme_done:
         print("README.md 里的精简表已更新。")
+    elif P.tag:
+        print("带标签的运行不改 README；运行 compare 可以生成前后对比表。")
     elif not partial:
         print("README.md 里没有找到 <!-- eval-table-start --> 标记，精简表没有更新。")
 
@@ -387,8 +420,8 @@ def cmd_latency(args):
         est += args.n * (4000 * m["price"]["input"] + OUTPUT_TOKENS_GUESS[mk] * m["price"]["output"]) / 1e6
     print(f"直连测速：{len(keys)} 个模型 × {len(sample)} 个案例，标准价，预计约 ${est:.2f}。")
     confirm("确认开始？", args.yes)
-    ek.RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-    with LATENCY_FILE.open("a", encoding="utf-8") as f:
+    P.results_dir.mkdir(parents=True, exist_ok=True)
+    with P.latency_file.open("a", encoding="utf-8") as f:
         for mk in keys:
             m = ek.MODELS[mk]
             for c in sample:
@@ -406,17 +439,112 @@ def cmd_latency(args):
                     print(f"  {m['label']:<20}{c.id:<10} 出错：{e}")
                 f.write(json.dumps(rec, ensure_ascii=False) + "\n")
                 f.flush()
-    print(f"耗时记录已追加到 {LATENCY_FILE}。")
-    if BATCHES_FILE.exists():
+    print(f"耗时记录已追加到 {P.latency_file}。")
+    if P.batches_file.exists():
         rec = load_record()
-        if any(raw_path(b["model_key"]).exists() for b in rec["batches"]):
+        if any(P.raw_path(b["model_key"]).exists() for b in rec["batches"]):
             do_score(rec, partial=any(b["status"] != "ended" for b in rec["batches"]))
+
+
+# --------------------------------------------------------------------------- compare
+
+
+COMPARE_ROWS = [
+    ("Recall", "recall", ek.pct),
+    ("Precision", "precision", ek.pct),
+    ("FP rate (all)", "fp_rate", ek.pct),
+    ("FP rate (critical/major)", "fp_rate_major", ek.pct),
+    ("FP per run (all)", "fp_per_run", ek.num),
+    ("FP per run (critical/major)", "fp_per_run_major", ek.num),
+    ("Clean cases flagged (critical/major)", "clean_flagged_major", ek.pct),
+    ("Clean cases flagged (any)", "clean_flagged_any", ek.pct),
+    ("Consistency", "consistency", ek.pct),
+    ("Refused", "refusal_rate", ek.pct),
+    ("Mean cost / check (batch)", "mean_cost_usd", ek.money),
+]
+
+
+def compare_markdown(base: dict, other: dict, keys: list) -> list:
+    bl = f"prompt {base.get('prompt_version', 'v1')}"
+    ol = f"prompt {other.get('prompt_version', '?')}" + (f" ({other['tag']})" if other.get("tag") else "")
+    lines = []
+    for mk in keys:
+        eb, eo = base["models"][mk], other["models"][mk]
+        lines += [f"### {eb['label']}: {bl} vs {ol}", "",
+                  f"| Metric | {bl} | {ol} |", "|---|---|---|"]
+        for label, key, fmt in COMPARE_ROWS:
+            lines.append(f"| {label} | {fmt(eb['all'].get(key))} | {fmt(eo['all'].get(key))} |")
+        lines.append(f"| Runs ok / total | {eb['all']['ok']} / {eb['all']['runs']} | {eo['all']['ok']} / {eo['all']['runs']} |")
+        lines.append("")
+        lines += [f"| Subset | FP rate (critical/major) {bl} | FP rate (critical/major) {ol} | "
+                  f"Clean flagged (critical/major) {bl} | Clean flagged (critical/major) {ol} | Recall {bl} | Recall {ol} |",
+                  "|---|---|---|---|---|---|---|"]
+        for src in ("handwritten", "synthetic"):
+            mb, mo = eb.get(src) or {}, eo.get(src) or {}
+            lines.append(f"| {src} | {ek.pct(mb.get('fp_rate_major'))} | {ek.pct(mo.get('fp_rate_major'))} | "
+                         f"{ek.pct(mb.get('clean_flagged_major'))} | {ek.pct(mo.get('clean_flagged_major'))} | "
+                         f"{ek.pct(mb.get('recall'))} | {ek.pct(mo.get('recall'))} |")
+        lines.append("")
+    return lines
+
+
+def replace_block(text: str, start: str, end: str, block: str, append_if_missing: bool) -> str | None:
+    if start in text and end in text:
+        pre, rest = text.split(start, 1)
+        _, post = rest.split(end, 1)
+        return pre + start + "\n" + block + "\n" + end + post
+    if append_if_missing:
+        return text.rstrip("\n") + "\n\n" + start + "\n" + block + "\n" + end + "\n"
+    return None
+
+
+def cmd_compare(args):
+    if not args.tag:
+        die("compare 需要 --tag，例如：python tests/run_eval.py compare --tag prompt-v2")
+    base, other = Paths(args.baseline), Paths(args.tag)
+    for p in (base.summary_file, other.summary_file):
+        if not p.exists():
+            die(f"找不到 {p}。先对该运行执行 collect。")
+    sb = json.loads(base.summary_file.read_text(encoding="utf-8"))
+    so = json.loads(other.summary_file.read_text(encoding="utf-8"))
+    keys = [k for k in so["models"] if k in sb["models"] and (not args.models or k in args.models)]
+    if not keys:
+        die("两个运行没有共同的模型，无法对比。")
+    title = f"## Comparison: {base.tag or 'baseline'} vs {other.tag}"
+    note = (f"_Same {so['n_cases']} cases and {so.get('reps', 3)} repeats; only the system prompt changed "
+            f"(prompt {sb.get('prompt_version', 'v1')} -> prompt {so.get('prompt_version', '?')}). "
+            f"Full results of the tagged run: [docs/{other.eval_md.name}]({other.eval_md.name})._")
+    body = "\n".join([title, "", note, "", *compare_markdown(sb, so, keys)])
+
+    eval_text = base.eval_md.read_text(encoding="utf-8") if base.eval_md.exists() else "# Evaluation\n"
+    base.eval_md.write_text(replace_block(eval_text, ek.COMPARE_START, ek.COMPARE_END, body, True), encoding="utf-8")
+    print(f"对比表已写入 {base.eval_md}。")
+
+    readme = ek.README.read_text(encoding="utf-8")
+    short = [f"_Prompt revision ({other.tag}): " + "; ".join(
+        f"{so['models'][k]['label']} FP rate (critical/major) {ek.pct(sb['models'][k]['all'].get('fp_rate_major'))} "
+        f"→ {ek.pct(so['models'][k]['all'].get('fp_rate_major'))}, clean cases wrongly flagged "
+        f"{ek.pct(sb['models'][k]['all'].get('clean_flagged_major'))} → {ek.pct(so['models'][k]['all'].get('clean_flagged_major'))}, "
+        f"recall {ek.pct(sb['models'][k]['all'].get('recall'))} → {ek.pct(so['models'][k]['all'].get('recall'))}"
+        for k in keys) + ". Details in [docs/eval.md](docs/eval.md#comparison)._"]
+    new = replace_block(readme, ek.README_COMPARE_START, ek.README_COMPARE_END, "\n".join(short), False)
+    if new is None:
+        print("README.md 里没有 <!-- eval-compare-start --> 标记，README 没有改。")
+    else:
+        ek.README.write_text(new, encoding="utf-8")
+        print("README.md 里的对比说明已更新。")
+    for mk in keys:
+        eb, eo = sb["models"][mk]["all"], so["models"][mk]["all"]
+        print(f"{so['models'][mk]['label']}: 误报率(严重/主要) {ek.pct(eb.get('fp_rate_major'))} → {ek.pct(eo.get('fp_rate_major'))}；"
+              f"干净案例被冤枉 {ek.pct(eb.get('clean_flagged_major'))} → {ek.pct(eo.get('clean_flagged_major'))}；"
+              f"召回率 {ek.pct(eb.get('recall'))} → {ek.pct(eo.get('recall'))}")
 
 
 # --------------------------------------------------------------------------- main
 
 
 def main():
+    global P
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
 
@@ -424,22 +552,26 @@ def main():
         p.add_argument("--models", nargs="*", help=f"subset of: {' '.join(ek.MODELS)}")
         p.add_argument("--reps", type=int, default=3, help="repeats per case and model (default 3)")
         p.add_argument("--yes", action="store_true", help="skip the confirmation prompt")
+        p.add_argument("--tag", help="keep this run separate under tests/results/TAG/ (e.g. after a prompt change)")
 
     p = sub.add_parser("estimate"); common(p)
     p.add_argument("--latency-n", type=int, default=0, help="also estimate a direct-call timing sample of N per model")
     p = sub.add_parser("submit"); common(p)
-    p.add_argument("--force", action="store_true", help="submit even if batches.json already exists")
+    p.add_argument("--force", action="store_true", help="start over even if batches.json already exists")
     p = sub.add_parser("status"); common(p)
     p = sub.add_parser("collect"); common(p)
     p.add_argument("--redownload", action="store_true", help="download results again even if raw files exist")
     p = sub.add_parser("score"); common(p)
     p = sub.add_parser("latency"); common(p)
     p.add_argument("--n", type=int, default=5, help="cases per model (default 5)")
+    p = sub.add_parser("compare"); common(p)
+    p.add_argument("--baseline", help="tag of the baseline run (default: the untagged baseline)")
 
     args = ap.parse_args()
+    P = Paths(args.tag)
     try:
         {"estimate": cmd_estimate, "submit": cmd_submit, "status": cmd_status, "collect": cmd_collect,
-         "score": cmd_score, "latency": cmd_latency}[args.cmd](args)
+         "score": cmd_score, "latency": cmd_latency, "compare": cmd_compare}[args.cmd](args)
     except anthropic.AuthenticationError:
         die("API key 被拒绝：打开项目文件夹里的 .env，检查 ANTHROPIC_API_KEY= 后面的 key 是否完整"
             "（以 sk-ant- 开头），保存后再运行一次。")

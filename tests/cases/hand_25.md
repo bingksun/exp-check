@@ -4,7 +4,7 @@ source: handwritten
 category: CUT&Tag
 title: 干净案例，规范的CUT&Tag
 answer: 无
-tolerated: 无
+tolerated: R02
 ---
 
 ## Text
@@ -15,3 +15,4 @@ CUT&Tag for H3K27me3 was performed in two biological replicates per condition wi
 
 - Original answer (handwritten): 无
 - 干净案例：两个生物学重复、IgG对照、抗体经抑制剂验证、spike-in归一化、SEACR+IDR、DESeq2 FDR。
+- Key consistency fix 2026-10-28: added R02 to tolerated so that the same situation is scored the same way across cases (prompt-review finding).

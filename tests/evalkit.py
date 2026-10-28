@@ -539,8 +539,8 @@ def write_eval_md(summary: dict, reps: int, cfg: dict, path: Path = DOCS_EVAL) -
         "cases were audited automatically (see tests/README.md); case files live in `tests/cases/`.",
         f"- **Models:** " + ", ".join(f"{e['label']} (`{e['model_id']}`)" for e in s["models"].values()) + ".",
         f"- **Repeats:** every case was checked {reps} times per model, submitted through the Message Batches API "
-        f"(50% of standard prices). Effort `{cfg['effort']}`, max_tokens {cfg['max_tokens']}, the same prompt, "
-        "rules and JSON schema as the app.",
+        f"(50% of standard prices). Effort `{cfg['effort']}`, max_tokens {cfg['max_tokens']}, the same rules and "
+        f"JSON schema as the app, system prompt version `{s.get('prompt_version', 'v1')}`.",
         "- **Scoring:** by rule ID only, no model-as-judge. Each case file lists the planted rules (the answer key) "
         "and optionally *tolerated* rules that are arguably present but were not planted; tolerated rules count "
         "neither as hits nor as false positives.",
@@ -655,12 +655,23 @@ def write_eval_md(summary: dict, reps: int, cfg: dict, path: Path = DOCS_EVAL) -
         "On Windows, `collect_results.bat` runs the collect step.",
         "",
     ]
+    text = "\n".join(lines)
+    # Keep a comparison block written earlier by `run_eval.py compare` when the file is regenerated.
+    if path.exists():
+        old = path.read_text(encoding="utf-8")
+        if COMPARE_START in old and COMPARE_END in old:
+            block = old.split(COMPARE_START, 1)[1].split(COMPARE_END, 1)[0]
+            text = text.rstrip("\n") + "\n\n" + COMPARE_START + block + COMPARE_END + "\n"
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text("\n".join(lines), encoding="utf-8")
+    path.write_text(text, encoding="utf-8")
 
 
 README_START = "<!-- eval-table-start -->"
 README_END = "<!-- eval-table-end -->"
+README_COMPARE_START = "<!-- eval-compare-start -->"
+README_COMPARE_END = "<!-- eval-compare-end -->"
+COMPARE_START = "<!-- compare-start -->"
+COMPARE_END = "<!-- compare-end -->"
 
 
 def update_readme(summary: dict, path: Path = README) -> bool:

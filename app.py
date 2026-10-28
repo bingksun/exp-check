@@ -153,6 +153,8 @@ if report:
     if report["not_applicable"]:
         with st.expander(f"Rules not applicable to this text ({len(report['not_applicable'])})"):
             st.markdown(", ".join(report["not_applicable"]))
+    if report.get("notes"):
+        st.markdown(f"**Notes (not rule violations):** {report['notes']}")
 
     meta = report.get("_meta", {})
     if meta:

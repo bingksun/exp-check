@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-28T15:14:48+00:00",
+  "generated_at": "2026-10-28T16:45:49+00:00",
   "n_cases": 75,
   "n_handwritten": 25,
   "n_synthetic": 50,
@@ -28,18 +28,18 @@
         "errors": {},
         "planted": 393,
         "caught": 387,
-        "reported": 1018,
-        "false_positives": 631,
+        "reported": 992,
+        "false_positives": 605,
         "recall": 0.9847328244274809,
-        "precision": 0.3801571709233792,
-        "fp_rate": 0.6198428290766208,
-        "fp_per_run": 2.8044444444444445,
-        "fp_rate_major": 0.4398148148148148,
-        "fp_per_run_major": 1.2666666666666666,
+        "precision": 0.3901209677419355,
+        "fp_rate": 0.6098790322580645,
+        "fp_per_run": 2.688888888888889,
+        "fp_rate_major": 0.4182692307692308,
+        "fp_per_run_major": 1.16,
         "fp_by_severity": {
-          "critical": 35,
-          "major": 250,
-          "minor": 346
+          "critical": 19,
+          "major": 242,
+          "minor": 344
         },
         "refused_cases": {},
         "clean_runs": 45,
@@ -59,17 +59,17 @@
         "errors": {},
         "planted": 213,
         "caught": 207,
-        "reported": 405,
-        "false_positives": 198,
+        "reported": 387,
+        "false_positives": 180,
         "recall": 0.971830985915493,
-        "precision": 0.5111111111111111,
-        "fp_rate": 0.4888888888888889,
-        "fp_per_run": 2.64,
-        "fp_rate_major": 0.3685897435897436,
-        "fp_per_run_major": 1.5333333333333334,
+        "precision": 0.5348837209302325,
+        "fp_rate": 0.46511627906976744,
+        "fp_per_run": 2.4,
+        "fp_rate_major": 0.3299319727891156,
+        "fp_per_run_major": 1.2933333333333332,
         "fp_by_severity": {
-          "critical": 31,
-          "major": 84,
+          "critical": 18,
+          "major": 79,
           "minor": 83
         },
         "refused_cases": {},
@@ -90,18 +90,18 @@
         "errors": {},
         "planted": 180,
         "caught": 180,
-        "reported": 613,
-        "false_positives": 433,
+        "reported": 605,
+        "false_positives": 425,
         "recall": 1.0,
-        "precision": 0.2936378466557912,
-        "fp_rate": 0.7063621533442088,
-        "fp_per_run": 2.8866666666666667,
-        "fp_rate_major": 0.5059523809523809,
-        "fp_per_run_major": 1.1333333333333333,
+        "precision": 0.2975206611570248,
+        "fp_rate": 0.7024793388429752,
+        "fp_per_run": 2.8333333333333335,
+        "fp_rate_major": 0.49696969696969695,
+        "fp_per_run_major": 1.0933333333333333,
         "fp_by_severity": {
-          "critical": 4,
-          "major": 166,
-          "minor": 263
+          "critical": 1,
+          "major": 163,
+          "minor": 261
         },
         "refused_cases": {},
         "clean_runs": 30,
@@ -125,13 +125,13 @@
         "R02": {
           "planted": 84,
           "caught": 82,
-          "false_positives": 38,
+          "false_positives": 35,
           "recall": 0.9761904761904762
         },
         "R03": {
           "planted": 63,
           "caught": 63,
-          "false_positives": 91,
+          "false_positives": 83,
           "recall": 1.0
         },
         "R04": {
@@ -149,7 +149,7 @@
         "R06": {
           "planted": 15,
           "caught": 15,
-          "false_positives": 16,
+          "false_positives": 10,
           "recall": 1.0
         },
         "R07": {
@@ -179,7 +179,7 @@
         "R11": {
           "planted": 18,
           "caught": 18,
-          "false_positives": 72,
+          "false_positives": 63,
           "recall": 1.0
         },
         "R12": {
@@ -207,23 +207,23 @@
         "errors": {},
         "planted": 393,
         "caught": 388,
-        "reported": 825,
-        "false_positives": 437,
+        "reported": 800,
+        "false_positives": 412,
         "recall": 0.9872773536895675,
-        "precision": 0.4703030303030303,
-        "fp_rate": 0.5296969696969697,
-        "fp_per_run": 1.9422222222222223,
-        "fp_rate_major": 0.2697095435684647,
-        "fp_per_run_major": 0.5777777777777777,
+        "precision": 0.485,
+        "fp_rate": 0.515,
+        "fp_per_run": 1.8311111111111111,
+        "fp_rate_major": 0.22975929978118162,
+        "fp_per_run_major": 0.4666666666666667,
         "fp_by_severity": {
-          "critical": 22,
-          "major": 108,
+          "critical": 9,
+          "major": 96,
           "minor": 307
         },
         "refused_cases": {},
         "clean_runs": 45,
         "clean_flagged_any": 0.9555555555555556,
-        "clean_flagged_major": 0.3333333333333333,
+        "clean_flagged_major": 0.28888888888888886,
         "mean_cost_usd": 0.013331898888888888,
         "total_cost_usd": 2.99967725,
         "mean_output_tokens": 2476.7066666666665,
@@ -238,23 +238,23 @@
         "errors": {},
         "planted": 213,
         "caught": 208,
-        "reported": 372,
-        "false_positives": 164,
+        "reported": 355,
+        "false_positives": 147,
         "recall": 0.9765258215962441,
-        "precision": 0.5591397849462365,
-        "fp_rate": 0.44086021505376344,
-        "fp_per_run": 2.1866666666666665,
-        "fp_rate_major": 0.2803030303030303,
-        "fp_per_run_major": 0.9866666666666667,
+        "precision": 0.5859154929577465,
+        "fp_rate": 0.4140845070422535,
+        "fp_per_run": 1.96,
+        "fp_rate_major": 0.23076923076923078,
+        "fp_per_run_major": 0.76,
         "fp_by_severity": {
-          "critical": 15,
-          "major": 59,
+          "critical": 9,
+          "major": 48,
           "minor": 90
         },
         "refused_cases": {},
         "clean_runs": 15,
         "clean_flagged_any": 1.0,
-        "clean_flagged_major": 0.5333333333333333,
+        "clean_flagged_major": 0.4,
         "mean_cost_usd": 0.01240655,
         "total_cost_usd": 0.93049125,
         "mean_output_tokens": 2321.7466666666664,
@@ -269,17 +269,17 @@
         "errors": {},
         "planted": 180,
         "caught": 180,
-        "reported": 453,
-        "false_positives": 273,
+        "reported": 445,
+        "false_positives": 265,
         "recall": 1.0,
-        "precision": 0.3973509933774834,
-        "fp_rate": 0.6026490066225165,
-        "fp_per_run": 1.82,
-        "fp_rate_major": 0.25688073394495414,
-        "fp_per_run_major": 0.37333333333333335,
+        "precision": 0.4044943820224719,
+        "fp_rate": 0.5955056179775281,
+        "fp_per_run": 1.7666666666666666,
+        "fp_rate_major": 0.22857142857142856,
+        "fp_per_run_major": 0.32,
         "fp_by_severity": {
-          "critical": 7,
-          "major": 49,
+          "critical": 0,
+          "major": 48,
           "minor": 217
         },
         "refused_cases": {},
@@ -304,13 +304,13 @@
         "R02": {
           "planted": 84,
           "caught": 83,
-          "false_positives": 17,
+          "false_positives": 14,
           "recall": 0.9880952380952381
         },
         "R03": {
           "planted": 63,
           "caught": 63,
-          "false_positives": 57,
+          "false_positives": 49,
           "recall": 1.0
         },
         "R04": {
@@ -328,7 +328,7 @@
         "R06": {
           "planted": 15,
           "caught": 15,
-          "false_positives": 13,
+          "false_positives": 7,
           "recall": 1.0
         },
         "R07": {
@@ -358,7 +358,7 @@
         "R11": {
           "planted": 18,
           "caught": 18,
-          "false_positives": 52,
+          "false_positives": 44,
           "recall": 1.0
         },
         "R12": {
@@ -388,18 +388,18 @@
         },
         "planted": 243,
         "caught": 242,
-        "reported": 504,
-        "false_positives": 262,
+        "reported": 488,
+        "false_positives": 246,
         "recall": 0.9958847736625515,
-        "precision": 0.4801587301587302,
-        "fp_rate": 0.5198412698412699,
-        "fp_per_run": 1.832167832167832,
-        "fp_rate_major": 0.3314285714285714,
-        "fp_per_run_major": 0.8111888111888111,
+        "precision": 0.4959016393442623,
+        "fp_rate": 0.5040983606557377,
+        "fp_per_run": 1.7202797202797202,
+        "fp_rate_major": 0.30357142857142855,
+        "fp_per_run_major": 0.7132867132867133,
         "fp_by_severity": {
-          "critical": 14,
-          "major": 102,
-          "minor": 146
+          "critical": 5,
+          "major": 97,
+          "minor": 144
         },
         "refused_cases": {
           "hand_02": 1,
@@ -453,17 +453,17 @@
         },
         "planted": 146,
         "caught": 145,
-        "reported": 277,
-        "false_positives": 132,
+        "reported": 266,
+        "false_positives": 121,
         "recall": 0.9931506849315068,
-        "precision": 0.5234657039711191,
-        "fp_rate": 0.47653429602888087,
-        "fp_per_run": 2.357142857142857,
-        "fp_rate_major": 0.33962264150943394,
-        "fp_per_run_major": 1.2857142857142858,
+        "precision": 0.5451127819548872,
+        "fp_rate": 0.4548872180451128,
+        "fp_per_run": 2.1607142857142856,
+        "fp_rate_major": 0.3034825870646766,
+        "fp_per_run_major": 1.0892857142857142,
         "fp_by_severity": {
-          "critical": 11,
-          "major": 61,
+          "critical": 5,
+          "major": 56,
           "minor": 60
         },
         "refused_cases": {
@@ -494,18 +494,18 @@
         },
         "planted": 97,
         "caught": 97,
-        "reported": 227,
-        "false_positives": 130,
+        "reported": 222,
+        "false_positives": 125,
         "recall": 1.0,
-        "precision": 0.42731277533039647,
-        "fp_rate": 0.5726872246696035,
-        "fp_per_run": 1.4942528735632183,
-        "fp_rate_major": 0.3188405797101449,
-        "fp_per_run_major": 0.5057471264367817,
+        "precision": 0.4369369369369369,
+        "fp_rate": 0.5630630630630631,
+        "fp_per_run": 1.4367816091954022,
+        "fp_rate_major": 0.3037037037037037,
+        "fp_per_run_major": 0.47126436781609193,
         "fp_by_severity": {
-          "critical": 3,
+          "critical": 0,
           "major": 41,
-          "minor": 86
+          "minor": 84
         },
         "refused_cases": {
           "syn_animal_03": 3,
@@ -554,13 +554,13 @@
         "R02": {
           "planted": 59,
           "caught": 58,
-          "false_positives": 3,
+          "false_positives": 0,
           "recall": 0.9830508474576272
         },
         "R03": {
           "planted": 45,
           "caught": 45,
-          "false_positives": 44,
+          "false_positives": 39,
           "recall": 1.0
         },
         "R04": {
@@ -578,7 +578,7 @@
         "R06": {
           "planted": 9,
           "caught": 9,
-          "false_positives": 11,
+          "false_positives": 8,
           "recall": 1.0
         },
         "R07": {
@@ -608,7 +608,7 @@
         "R11": {
           "planted": 7,
           "caught": 7,
-          "false_positives": 26,
+          "false_positives": 21,
           "recall": 1.0
         },
         "R12": {
@@ -638,17 +638,17 @@
         },
         "planted": 270,
         "caught": 266,
-        "reported": 547,
-        "false_positives": 281,
+        "reported": 532,
+        "false_positives": 266,
         "recall": 0.9851851851851852,
-        "precision": 0.48628884826325414,
-        "fp_rate": 0.5137111517367459,
-        "fp_per_run": 1.9246575342465753,
-        "fp_rate_major": 0.268361581920904,
-        "fp_per_run_major": 0.6506849315068494,
+        "precision": 0.5,
+        "fp_rate": 0.5,
+        "fp_per_run": 1.821917808219178,
+        "fp_rate_major": 0.2359882005899705,
+        "fp_per_run_major": 0.547945205479452,
         "fp_by_severity": {
-          "critical": 11,
-          "major": 84,
+          "critical": 3,
+          "major": 77,
           "minor": 186
         },
         "refused_cases": {
@@ -684,7 +684,7 @@
         },
         "clean_runs": 27,
         "clean_flagged_any": 1.0,
-        "clean_flagged_major": 0.25925925925925924,
+        "clean_flagged_major": 0.2222222222222222,
         "mean_cost_usd": 0.066264,
         "total_cost_usd": 14.9094,
         "mean_output_tokens": 2035.4533333333334,
@@ -701,17 +701,17 @@
         },
         "planted": 174,
         "caught": 170,
-        "reported": 326,
-        "false_positives": 156,
+        "reported": 314,
+        "false_positives": 144,
         "recall": 0.9770114942528736,
-        "precision": 0.5214723926380368,
-        "fp_rate": 0.4785276073619632,
-        "fp_per_run": 2.4761904761904763,
-        "fp_rate_major": 0.2838427947598253,
-        "fp_per_run_major": 1.0317460317460319,
+        "precision": 0.5414012738853503,
+        "fp_rate": 0.4585987261146497,
+        "fp_per_run": 2.2857142857142856,
+        "fp_rate_major": 0.24423963133640553,
+        "fp_per_run_major": 0.8412698412698413,
         "fp_by_severity": {
-          "critical": 9,
-          "major": 56,
+          "critical": 3,
+          "major": 50,
           "minor": 91
         },
         "refused_cases": {
@@ -723,7 +723,7 @@
         },
         "clean_runs": 13,
         "clean_flagged_any": 1.0,
-        "clean_flagged_major": 0.5384615384615384,
+        "clean_flagged_major": 0.46153846153846156,
         "mean_cost_usd": 0.081001325,
         "total_cost_usd": 6.075099375,
         "mean_output_tokens": 2825.0133333333333,
@@ -740,17 +740,17 @@
         },
         "planted": 96,
         "caught": 96,
-        "reported": 221,
-        "false_positives": 125,
+        "reported": 218,
+        "false_positives": 122,
         "recall": 1.0,
-        "precision": 0.4343891402714932,
-        "fp_rate": 0.5656108597285068,
-        "fp_per_run": 1.5060240963855422,
-        "fp_rate_major": 0.24,
-        "fp_per_run_major": 0.3614457831325301,
+        "precision": 0.44036697247706424,
+        "fp_rate": 0.5596330275229358,
+        "fp_per_run": 1.4698795180722892,
+        "fp_rate_major": 0.22131147540983606,
+        "fp_per_run_major": 0.3253012048192771,
         "fp_by_severity": {
-          "critical": 2,
-          "major": 28,
+          "critical": 0,
+          "major": 27,
           "minor": 95
         },
         "refused_cases": {
@@ -800,13 +800,13 @@
         "R02": {
           "planted": 56,
           "caught": 55,
-          "false_positives": 6,
+          "false_positives": 3,
           "recall": 0.9821428571428571
         },
         "R03": {
           "planted": 47,
           "caught": 45,
-          "false_positives": 37,
+          "false_positives": 34,
           "recall": 0.9574468085106383
         },
         "R04": {
@@ -824,7 +824,7 @@
         "R06": {
           "planted": 15,
           "caught": 14,
-          "false_positives": 9,
+          "false_positives": 6,
           "recall": 0.9333333333333333
         },
         "R07": {
@@ -854,7 +854,7 @@
         "R11": {
           "planted": 12,
           "caught": 12,
-          "false_positives": 26,
+          "false_positives": 20,
           "recall": 1.0
         },
         "R12": {
@@ -875,5 +875,7 @@
     }
   },
   "partial": false,
-  "reps": 3
+  "reps": 3,
+  "tag": null,
+  "prompt_version": "v1"
 }

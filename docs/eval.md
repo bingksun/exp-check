@@ -1,12 +1,12 @@
 # Evaluation
 
-_Generated 2026-10-28T15:14:48+00:00 by `tests/run_eval.py`._
+_Generated 2026-10-28T16:45:49+00:00 by `tests/run_eval.py`._
 
 ## Setup
 
 - **Cases:** 75 (25 handwritten by the project owner, 50 synthetic generated with Claude Opus 5.5 - each case file's Notes name the model that actually served the request, since one category fell back to Claude Opus 5 after a safety-classifier refusal), of which 15 are clean cases with no planted problem. Answer keys of the synthetic cases were audited automatically (see tests/README.md); case files live in `tests/cases/`.
 - **Models:** Claude Haiku 5.5 (`claude-haiku-5-5`), Claude Sonnet 5.5 (`claude-sonnet-5-5`), Claude Opus 5.5 (`claude-opus-5-5`), Claude Fable 5.1 (`claude-fable-5-1`).
-- **Repeats:** every case was checked 3 times per model, submitted through the Message Batches API (50% of standard prices). Effort `high`, max_tokens 16000, the same prompt, rules and JSON schema as the app.
+- **Repeats:** every case was checked 3 times per model, submitted through the Message Batches API (50% of standard prices). Effort `high`, max_tokens 16000, the same rules and JSON schema as the app, system prompt version `v1`.
 - **Scoring:** by rule ID only, no model-as-judge. Each case file lists the planted rules (the answer key) and optionally *tolerated* rules that are arguably present but were not planted; tolerated rules count neither as hits nor as false positives.
 
 ## Metric definitions
@@ -25,28 +25,28 @@ _Generated 2026-10-28T15:14:48+00:00 by `tests/run_eval.py`._
 
 | Model | Recall | Precision | FP rate (all) | FP rate (critical/major) | FP per run (all) | FP per run (critical/major) | Clean cases flagged (critical/major) | Clean cases flagged (any) | Consistency | Mean cost / check (batch) | Runs ok / total |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| Claude Haiku 5.5 | 98% | 38% | 62% | 44% | 2.8 | 1.3 | 84% | 100% | 81% | $0.0013 | 225 / 225 |
-| Claude Sonnet 5.5 | 99% | 47% | 53% | 27% | 1.9 | 0.6 | 33% | 96% | 81% | $0.013 | 225 / 225 |
-| Claude Opus 5.5 | 100% | 48% | 52% | 33% | 1.8 | 0.8 | 56% | 100% | 85% | $0.022 | 143 / 225 |
-| Claude Fable 5.1 | 99% | 49% | 51% | 27% | 1.9 | 0.7 | 26% | 100% | 81% | $0.066 | 146 / 225 |
+| Claude Haiku 5.5 | 98% | 39% | 61% | 42% | 2.7 | 1.2 | 84% | 100% | 81% | $0.0013 | 225 / 225 |
+| Claude Sonnet 5.5 | 99% | 48% | 52% | 23% | 1.8 | 0.5 | 29% | 96% | 81% | $0.013 | 225 / 225 |
+| Claude Opus 5.5 | 100% | 50% | 50% | 30% | 1.7 | 0.7 | 56% | 100% | 85% | $0.022 | 143 / 225 |
+| Claude Fable 5.1 | 99% | 50% | 50% | 24% | 1.8 | 0.5 | 22% | 100% | 81% | $0.066 | 146 / 225 |
 
 ## Results - handwritten cases
 
 | Model | Recall | Precision | FP rate (all) | FP rate (critical/major) | FP per run (all) | FP per run (critical/major) | Clean cases flagged (critical/major) | Clean cases flagged (any) | Consistency | Mean cost / check (batch) | Runs ok / total |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| Claude Haiku 5.5 | 97% | 51% | 49% | 37% | 2.6 | 1.5 | 100% | 100% | 95% | $0.0012 | 75 / 75 |
-| Claude Sonnet 5.5 | 98% | 56% | 44% | 28% | 2.2 | 1.0 | 53% | 100% | 92% | $0.012 | 75 / 75 |
-| Claude Opus 5.5 | 99% | 52% | 48% | 34% | 2.4 | 1.3 | 75% | 100% | 93% | $0.029 | 56 / 75 |
-| Claude Fable 5.1 | 98% | 52% | 48% | 28% | 2.5 | 1.0 | 54% | 100% | 92% | $0.081 | 63 / 75 |
+| Claude Haiku 5.5 | 97% | 53% | 47% | 33% | 2.4 | 1.3 | 100% | 100% | 95% | $0.0012 | 75 / 75 |
+| Claude Sonnet 5.5 | 98% | 59% | 41% | 23% | 2.0 | 0.8 | 40% | 100% | 92% | $0.012 | 75 / 75 |
+| Claude Opus 5.5 | 99% | 55% | 45% | 30% | 2.2 | 1.1 | 75% | 100% | 93% | $0.029 | 56 / 75 |
+| Claude Fable 5.1 | 98% | 54% | 46% | 24% | 2.3 | 0.8 | 46% | 100% | 92% | $0.081 | 63 / 75 |
 
 ## Results - synthetic cases
 
 | Model | Recall | Precision | FP rate (all) | FP rate (critical/major) | FP per run (all) | FP per run (critical/major) | Clean cases flagged (critical/major) | Clean cases flagged (any) | Consistency | Mean cost / check (batch) | Runs ok / total |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| Claude Haiku 5.5 | 100% | 29% | 71% | 51% | 2.9 | 1.1 | 77% | 100% | 74% | $0.0014 | 150 / 150 |
-| Claude Sonnet 5.5 | 100% | 40% | 60% | 26% | 1.8 | 0.4 | 23% | 93% | 76% | $0.014 | 150 / 150 |
-| Claude Opus 5.5 | 100% | 43% | 57% | 32% | 1.5 | 0.5 | 40% | 100% | 80% | $0.018 | 87 / 150 |
-| Claude Fable 5.1 | 100% | 43% | 57% | 24% | 1.5 | 0.4 | 0% | 100% | 74% | $0.059 | 83 / 150 |
+| Claude Haiku 5.5 | 100% | 30% | 70% | 50% | 2.8 | 1.1 | 77% | 100% | 74% | $0.0014 | 150 / 150 |
+| Claude Sonnet 5.5 | 100% | 40% | 60% | 23% | 1.8 | 0.3 | 23% | 93% | 76% | $0.014 | 150 / 150 |
+| Claude Opus 5.5 | 100% | 44% | 56% | 30% | 1.4 | 0.5 | 40% | 100% | 80% | $0.018 | 87 / 150 |
+| Claude Fable 5.1 | 100% | 44% | 56% | 22% | 1.5 | 0.3 | 0% | 100% | 74% | $0.059 | 83 / 150 |
 
 ## Latency and direct-call cost (sample)
 
@@ -82,26 +82,26 @@ Each cell is recall with (caught / planted) counted over that model's successful
 
 | Model | Critical | Major | Minor |
 |---|---|---|---|
-| Claude Haiku 5.5 | 35 | 250 | 346 |
-| Claude Sonnet 5.5 | 22 | 108 | 307 |
-| Claude Opus 5.5 | 14 | 102 | 146 |
-| Claude Fable 5.1 | 11 | 84 | 186 |
+| Claude Haiku 5.5 | 19 | 242 | 344 |
+| Claude Sonnet 5.5 | 9 | 96 | 307 |
+| Claude Opus 5.5 | 5 | 97 | 144 |
+| Claude Fable 5.1 | 3 | 77 | 186 |
 
 ## Per-rule false positives (count of not-planted reports, all cases)
 
 | Rule | Claude Haiku 5.5 | Claude Sonnet 5.5 | Claude Opus 5.5 | Claude Fable 5.1 |
 |---|---|---|---|---|
 | R01 | 100 | 70 | 45 | 52 |
-| R02 | 38 | 17 | 3 | 6 |
-| R03 | 91 | 57 | 44 | 37 |
+| R02 | 35 | 14 | 0 | 3 |
+| R03 | 83 | 49 | 39 | 34 |
 | R04 | 62 | 58 | 34 | 35 |
 | R05 | 44 | 14 | 9 | 11 |
-| R06 | 16 | 13 | 11 | 9 |
+| R06 | 10 | 7 | 8 | 6 |
 | R07 | 13 | 12 | 11 | 9 |
 | R08 | 41 | 28 | 8 | 11 |
 | R09 | 11 | 10 | 0 | 0 |
 | R10 | 6 | 1 | 0 | 0 |
-| R11 | 72 | 52 | 26 | 26 |
+| R11 | 63 | 44 | 21 | 20 |
 | R12 | 137 | 105 | 71 | 85 |
 
 ## Failed runs

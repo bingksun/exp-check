@@ -4,7 +4,7 @@ source: handwritten
 category: RNAi
 title: 线虫RNAi喂食，克隆未验证、打分未盲
 answer: R02, R03, R05, R08, R12
-tolerated: 无
+tolerated: R06
 ---
 
 ## Text
@@ -16,3 +16,4 @@ Synchronized L1 worms were fed HT115 bacteria expressing dsRNA against gene-z fr
 - Original answer (handwritten): RNAi克隆未经测序确认（Ahringer库存在错标克隆）；没有验证敲低（qPCR或已知阳性对照）；没有报告动物数量和独立重复次数；打分未盲法；没有统计
 - Must not be flagged (handwritten): L4440空载体对照是正确的，不应报
 - 映射：RNAi克隆未测序确认→R12（试剂身份）；敲低未验证→R08；动物数和独立重复未报→R02；打分未盲→R05；没有统计→R03。不应报：L4440空载体对照是正确的（R01/R07不应被触发）。
+- Key consistency fix 2026-10-28: added R06 to tolerated so that the same situation is scored the same way across cases (prompt-review finding).

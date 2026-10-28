@@ -9,7 +9,8 @@ __pycache__/
 venv/
 
 # Evaluation: raw model outputs are large; the scored summary is kept
-tests/results/raw_*.jsonl
+tests/results/**/raw_*.jsonl
+tests/results/**/*.old.*
 
 # Editor / app-local files
 .claude/

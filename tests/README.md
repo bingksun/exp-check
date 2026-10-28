@@ -53,6 +53,15 @@ python tests/run_eval.py latency --n 5       # optional: direct calls to measure
 python tests/generate_cases.py               # regenerate synthetic cases (skips categories that exist)
 ```
 
+After changing the system prompt (bump `PROMPT_VERSION` in `checker.py`), keep the new run
+separate and compare it with the baseline:
+
+```bash
+python tests/run_eval.py submit --tag prompt-v2 --models sonnet55
+python tests/run_eval.py collect --tag prompt-v2       # writes docs/eval-prompt-v2.md
+python tests/run_eval.py compare --tag prompt-v2       # before/after tables in docs/eval.md and README
+```
+
 On Windows, double-click `collect_results.bat` in the project folder to run the collect step.
 Batch IDs are kept in `tests/results/batches.json`; raw model outputs land in
 `tests/results/raw_<model>.jsonl` (not committed) and the scored summary in
